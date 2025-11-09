@@ -23,6 +23,7 @@ public class simulationController {
         in = new Scanner(inputFile);
         out = new PrintWriter(outputFile);
 
+        //Start reading "inputFile"
         while(in.hasNext()){
             switch (in.next()) {
                 case "C" -> {
@@ -39,8 +40,6 @@ public class simulationController {
 
         in.close();
         out.flush();
-        out.close();
-
-        
+        out.close();  
     }
 }
