@@ -26,14 +26,11 @@ public class simulationController {
         //Start reading "inputFile"
         while(in.hasNext()){
             switch (in.next()) {
-                case "C" -> {
-                }
-                case "A" -> {
-                }
-                case "D" -> {
-                }
+                case "C" -> {sysGen(in.nextLine());}
+                case "A" -> {parseCmd(in.nextLine());}
+                case "D" -> {displayFinalStatistics(in.nextLine());}
                 default -> {
-                    System.out.println("Command does not exist");
+                    System.out.println("Non-eligible command");
                 }
             }
         }
@@ -43,16 +40,13 @@ public class simulationController {
         out.close();  
     }
 
-    public static void sysGen() {
-        
+    public static void sysGen(String line) { 
     }
 
-    public static void displayFinalStatistics() {
-
+    public static void displayFinalStatistics(String line) {
     }
 
-    public static void parseCmd(String line) {
-        
+    public static void parseCmd(String line) { 
     }
 
 

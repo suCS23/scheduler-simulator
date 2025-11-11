@@ -12,7 +12,9 @@ public class prManager {
 
     private void dispatch() {}
 
-    public void procArivvingRoutine() {}
+    public void procArivvingRoutine(Process p) {
+
+    }
 
     public void cpuTimeAdvanced(long duration) {}
 
