@@ -42,4 +42,18 @@ public class simulationController {
         out.flush();
         out.close();  
     }
+
+    public static void sysGen() {
+        
+    }
+
+    public static void displayFinalStatistics() {
+
+    }
+
+    public static void parseCmd(String line) {
+        
+    }
+
+
 }
