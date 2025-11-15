@@ -230,7 +230,7 @@ public class simulationController {
         }
         
         StringBuilder sb = new StringBuilder("[");
-        node<process> current = q.getFront();
+        node current = q.getFront();
         while (current != null) {
             sb.append("P").append(current.p.getPid());
             if (current.next != null) {
@@ -263,9 +263,9 @@ public class simulationController {
     
     public static void main(String[] args) {
         try {
-            // Update these paths to match your directory structure
-            String inputPath = "scheduelSimulator/src/IOfiles/input.txt";
-            String outputPath = "scheduelSimulator/src/IOfiles/output.txt";
+            // Absolute paths
+            String inputPath = "C:\\Users\\PC\\OneDrive\\Desktop\\CODING-GARAGE\\scheduelSimulator\\src\\IOfiles\\input.txt";
+            String outputPath = "C:\\Users\\PC\\OneDrive\\Desktop\\CODING-GARAGE\\scheduelSimulator\\src\\IOfiles\\output.txt";
             
             simulationController sim = new simulationController(inputPath, outputPath);
             sim.run();

@@ -18,7 +18,7 @@ public abstract class scheduler {
         SR = 0;
         int count = 0;
         
-        node<process> current = readyQ.getFront();
+        node current = readyQ.getFront();
         while (current != null) {
             SR += current.p.getRemainingTime();
             count++;

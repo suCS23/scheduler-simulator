@@ -1,0 +1,56 @@
+========================================
+SYSTEM CONFIGURATION
+========================================
+Start Time: 9
+Total Memory: 45 units
+Total Devices: 12
+Scheduler: DYNAMIC Round Robin
+========================================
+
+
+========================================
+SYSTEM STATE AT TIME: 36
+========================================
+
+PROCESS TABLE:
+PID    STATE      ARRIVAL    BURST      REMAINING  FINISH       TURNAROUND  
+--------------------------------------------------------------------------------
+1      REJECTED   10         8          8          N/A          N/A         
+2      REJECTED   13         13         13         N/A          N/A         
+3      REJECTED   15         5          5          N/A          N/A         
+4      REJECTED   19         7          7          N/A          N/A         
+5      REJECTED   21         4          4          N/A          N/A         
+6      REJECTED   28         8          8          N/A          N/A         
+7      REJECTED   34         12         12         N/A          N/A         
+8      REJECTED   35         8          8          N/A          N/A         
+
+
+QUEUE CONTENTS:
+--------------------------------------------------------------------------------
+Ready Queue: Empty
+Hold Queue 1 (Priority 1, Memory Ascending): Empty
+Hold Queue 2 (Priority 2, FIFO): Empty
+
+Currently Running: None
+
+
+SYSTEM RESOURCES:
+--------------------------------------------------------------------------------
+Available Memory: 45 / 0 units
+Available Devices: 12 / 0
+
+
+SCHEDULER METRICS:
+--------------------------------------------------------------------------------
+SR (Sum of Remaining Times): 0
+AR (Average/Time Quantum): 0
+
+
+========================================
+FINAL SYSTEM STATISTICS
+========================================
+Total Processes: 8
+Completed Processes: 0
+Average Turnaround Time: N/A
+========================================
+

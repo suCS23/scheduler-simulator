@@ -79,7 +79,7 @@ public class prManager {
         // If no process running, get next from ready queue
         if (runningProcess == null) {
             if (!readyQ.isEmpty()) {
-                node<process> nextNode = readyQ.dequeue();
+                node nextNode = readyQ.dequeue();
                 runningProcess = nextNode.p;
                 runningProcess.setState(3);  // RUNNING state
             } else {
@@ -136,13 +136,13 @@ public class prManager {
     private void checkHoldQueues() {
         // Check HQ1 first (higher priority)
         while (!HQ1.isEmpty() && kerServices.canAllocate(HQ1.peek().p)) {
-            node<process> pNode = HQ1.dequeue();
+            node pNode = HQ1.dequeue();
             createProcess(pNode.p);
         }
         
         // Then check HQ2
         while (!HQ2.isEmpty() && kerServices.canAllocate(HQ2.peek().p)) {
-            node<process> pNode = HQ2.dequeue();
+            node pNode = HQ2.dequeue();
             createProcess(pNode.p);
         }
     }

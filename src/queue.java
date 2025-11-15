@@ -1,7 +1,7 @@
 public class queue {
 
-    private node<process> front;
-    private node<process> rear;
+    private node front;
+    private node rear;
     private int size;
     private String schType;  // "fifo", "rm" (requested memory), "scheduler"
 
@@ -13,7 +13,7 @@ public class queue {
     }
 
     void enqueue(process p) {
-        node<process> newNode = new node<>(p, null);
+        node newNode = new node(p, null);
         
         // HQ1 uses "rm" - sorted ascending by memory required
         if (schType.equals("rm")) {
@@ -27,7 +27,7 @@ public class queue {
                 }
             } else if (front.p.getMr() == p.getMr()) {
                 // Same memory - FIFO for ties (insert after existing)
-                node<process> current = front;
+                node current = front;
                 while (current.next != null && current.next.p.getMr() <= p.getMr()) {
                     current = current.next;
                 }
@@ -38,7 +38,7 @@ public class queue {
                 }
             } else {
                 // Find correct position
-                node<process> current = front;
+                node current = front;
                 while (current.next != null && current.next.p.getMr() < p.getMr()) {
                     current = current.next;
                 }
@@ -61,9 +61,9 @@ public class queue {
         size++;
     }
 
-    node<process> dequeue() {
+    node dequeue() {
         if (!isEmpty()) {
-            node<process> temp = front;
+            node temp = front;
             front = front.next;
             if (front == null) {
                 rear = null;
@@ -83,7 +83,7 @@ public class queue {
         size = 0;
     }
 
-    node<process> peek() { 
+    node peek() { 
         return (!isEmpty()) ? front : null;
     }
 
@@ -96,16 +96,16 @@ public class queue {
     }
     
     // Helper to get front node for iteration (needed for display)
-    node<process> getFront() {
+    node getFront() {
         return front;
     }
 }
 
-class node<process> {
-    process p;
-    node<process> next;
+class node {
+    public process p;
+    public node next;
 
-    public node(process p, node<process> next) {
+    public node(process p, node next) {
         this.p = p;
         this.next = next;
     }
