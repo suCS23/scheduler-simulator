@@ -73,17 +73,10 @@ public class simulationController {
         procManager.setScheduler(schedulerType, teamNumber);
         procManager.setInternalClock(startTime);
         
-        out.println("========================================");
-        out.println("SYSTEM CONFIGURATION");
-        out.println("========================================");
-        out.println("Start Time: " + startTime);
-        out.println("Total Memory: " + memory + " units");
-        out.println("Total Devices: " + devices);
-        out.println("Scheduler: " + schedulerType.toUpperCase() + " Round Robin");
-        if (schedulerType.equalsIgnoreCase("static")) {
-            out.println("Time Quantum: " + (10 + teamNumber));
-        }
-        out.println("========================================\n");
+        // Print configuration header
+        String schedulerName = schedulerType.equalsIgnoreCase("dynamic") ? "DynamicRR" : "StaticRR";
+        out.printf("CONFIG at %.2f: mem=%d devices=%d scheduler=%s%n%n", 
+            (double)startTime, memory, devices, schedulerName);
     }
 
     public void parseCmd(String line) {
@@ -141,105 +134,105 @@ public class simulationController {
         // Process all events until display time
         processEventsUntil(displayTime);
         
-        out.println("\n========================================");
-        out.println("SYSTEM STATE AT TIME: " + displayTime);
-        out.println("========================================\n");
+        out.println("\n-------------------------------------------------------");
+        out.println("System Status:                                         ");
+        out.println("-------------------------------------------------------");
+        out.printf("          Time: %.2f%n", (double)displayTime);
+        out.printf("  Total Memory: %d%n", kerServices.getTotalMemorySize());
+        out.printf(" Avail. Memory: %d%n", kerServices.getMemorySize());
+        out.printf(" Total Devices: %d%n", kerServices.getTotalNoDevs());
+        out.printf("Avail. Devices: %d%n", kerServices.getNoDevs());
+        out.println();
         
-        // Display process table
-        out.println("PROCESS TABLE:");
-        out.println(String.format("%-6s %-10s %-10s %-10s %-10s %-12s %-12s",
-            "PID", "STATE", "ARRIVAL", "BURST", "REMAINING", "FINISH", "TURNAROUND"));
-        out.println("--------------------------------------------------------------------------------");
+        // Jobs in Ready List
+        out.println("Jobs in Ready List                                      ");
+        out.println("--------------------------------------------------------");
+        printReadyQueue(procManager.getReadyQ());
+        out.println();
+        
+        // Jobs in Long Job List (not used in our implementation)
+        out.println("Jobs in Long Job List                                   ");
+        out.println("--------------------------------------------------------");
+        out.println("  EMPTY");
+        out.println();
+        
+        // Jobs in Hold List 1
+        out.println("Jobs in Hold List 1                                     ");
+        out.println("--------------------------------------------------------");
+        printHoldQueue(procManager.getHQ1());
+        out.println();
+        
+        // Jobs in Hold List 2
+        out.println("Jobs in Hold List 2                                     ");
+        out.println("--------------------------------------------------------");
+        printHoldQueue(procManager.getHQ2());
+        out.println();
+        out.println();
+        
+        // Finished Jobs (detailed)
+        out.println("Finished Jobs (detailed)                                ");
+        out.println("--------------------------------------------------------");
+        out.println("  Job    ArrivalTime     CompleteTime     TurnaroundTime    WaitingTime");
+        out.println("------------------------------------------------------------------------");
         
         process[] processes = procManager.getProcessTable();
         int count = procManager.getProcessCount();
+        int finishedCount = 0;
         
         for (int i = 0; i < count; i++) {
             process p = processes[i];
-            String stateStr = getStateString(p.getState());
-            String remaining = p.getState() == 4 ? "0" : String.valueOf(p.getRemainingTime());
-            String finish = p.getState() == 4 ? String.valueOf(p.getFinishTime()) : "N/A";
-            String turnaround = p.getState() == 4 ? String.valueOf(p.getTurnaroundTime()) : "N/A";
-            
-            out.println(String.format("%-6d %-10s %-10d %-10d %-10s %-12s %-12s",
-                p.getPid(), stateStr, p.getAt(), p.getBt(), remaining, finish, turnaround));
-            
-            // Track statistics for completed processes
-            if (p.getState() == 4) {
+            if (p.getState() == 4) { // TERMINATED
+                finishedCount++;
+                double waitingTime = p.getTurnaroundTime() - p.getBt();
+                out.printf("  %-6d %-15.2f %-16.2f %-17.2f %-13.2f%n",
+                    p.getPid(), 
+                    (double)p.getAt(), 
+                    (double)p.getFinishTime(),
+                    (double)p.getTurnaroundTime(),
+                    waitingTime);
+                
                 totalTurnaroundTime += p.getTurnaroundTime();
-                completedProcesses++;
             }
         }
         
+        if (finishedCount == 0) {
+            out.println("  EMPTY");
+        }
+        
+        completedProcesses = finishedCount;
+        out.println("Total Finished Jobs:             " + completedProcesses);
         out.println();
-        
-        // Display queues
-        out.println("\nQUEUE CONTENTS:");
-        out.println("--------------------------------------------------------------------------------");
-        out.print("Ready Queue: ");
-        printQueue(procManager.getReadyQ());
-        
-        out.print("Hold Queue 1 (Priority 1, Memory Ascending): ");
-        printQueue(procManager.getHQ1());
-        
-        out.print("Hold Queue 2 (Priority 2, FIFO): ");
-        printQueue(procManager.getHQ2());
-        
-        process running = procManager.getRunningProcess();
-        out.println("\nCurrently Running: " + 
-            (running != null ? "Process " + running.getPid() : "None"));
-        
-        // Display system resources
-        out.println("\n\nSYSTEM RESOURCES:");
-        out.println("--------------------------------------------------------------------------------");
-        out.println("Available Memory: " + kerServices.getMemorySize() + 
-            " / " + kerServices.getTotalMemorySize() + " units");
-        out.println("Available Devices: " + kerServices.getNoDevs() + 
-            " / " + kerServices.getTotalNoDevs());
-        
-        // Display scheduler info
-        if (procManager.getScheduler() != null) {
-            out.println("\n\nSCHEDULER METRICS:");
-            out.println("--------------------------------------------------------------------------------");
-            out.println("SR (Sum of Remaining Times): " + procManager.getScheduler().getSR());
-            out.println("AR (Average/Time Quantum): " + procManager.getScheduler().getAR());
-        }
-        
-        // Final statistics
-        out.println("\n\n========================================");
-        out.println("FINAL SYSTEM STATISTICS");
-        out.println("========================================");
-        out.println("Total Processes: " + count);
-        out.println("Completed Processes: " + completedProcesses);
-        
-        if (completedProcesses > 0) {
-            double avgTurnaround = totalTurnaroundTime / completedProcesses;
-            out.println("Average Turnaround Time: " + String.format("%.2f", avgTurnaround));
-        } else {
-            out.println("Average Turnaround Time: N/A");
-        }
-        
-        out.println("========================================\n");
+        out.println();
     }
     
-    // Helper to print queue contents
-    private void printQueue(queue q) {
+    // Helper to print ready queue
+    private void printReadyQueue(queue q) {
         if (q.isEmpty()) {
-            out.println("Empty");
+            out.println("  EMPTY");
             return;
         }
         
-        StringBuilder sb = new StringBuilder("[");
         node current = q.getFront();
         while (current != null) {
-            sb.append("P").append(current.p.getPid());
-            if (current.next != null) {
-                sb.append(", ");
-            }
+            out.printf("Job ID %d , %.2f Cycles left to completion.%n", 
+                current.p.getPid(), (double)current.p.getRemainingTime());
             current = current.next;
         }
-        sb.append("]");
-        out.println(sb.toString());
+    }
+    
+    // Helper to print hold queues
+    private void printHoldQueue(queue q) {
+        if (q.isEmpty()) {
+            out.println("  EMPTY");
+            return;
+        }
+        
+        node current = q.getFront();
+        while (current != null) {
+            out.printf("Job ID %d , %.2f Cycles left to completion.%n", 
+                current.p.getPid(), (double)current.p.getRemainingTime());
+            current = current.next;
+        }
     }
     
     // Helper to convert state code to string
@@ -256,6 +249,7 @@ public class simulationController {
     }
     
     private void close() {
+        out.println("\n--- Simulation finished at time " + curTime + ".0 ---\n");
         in.close();
         out.flush();
         out.close();
@@ -264,8 +258,8 @@ public class simulationController {
     public static void main(String[] args) {
         try {
             // Absolute paths
-            String inputPath = "C:\\Users\\PC\\OneDrive\\Desktop\\CODING-GARAGE\\scheduelSimulator\\src\\IOfiles\\input.txt";
-            String outputPath = "C:\\Users\\PC\\OneDrive\\Desktop\\CODING-GARAGE\\scheduelSimulator\\src\\IOfiles\\output.txt";
+            String inputPath = "C:\\Users\\PC\\OneDrive\\Desktop\\CODING-GARAGE\\scheduelSimulator\\src\\IOfiles\\inputD0.txt";
+            String outputPath = "C:\\Users\\PC\\OneDrive\\Desktop\\CODING-GARAGE\\scheduelSimulator\\src\\IOfiles\\\\output.txt";
             
             simulationController sim = new simulationController(inputPath, outputPath);
             sim.run();

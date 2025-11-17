@@ -6,9 +6,12 @@ class otherKerServices {
     private int noDevs;
     private int totalNoDevs;
 
-    public otherKerServices(long memeorySize, int noDevs) {
-        this.memorySize = memeorySize;
+    // FIX: Initialize total resources
+    public otherKerServices(long memorySize, int noDevs) {
+        this.memorySize = memorySize;
+        this.totalMemorySize = memorySize; // Set total
         this.noDevs = noDevs;
+        this.totalNoDevs = noDevs;       // Set total
     }
 
     public void allocateMemory(process p) {
