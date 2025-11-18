@@ -1,3 +1,5 @@
+// prManager.java (UPDATED)
+
 public class prManager {
     
     private long internalClock;
@@ -8,167 +10,190 @@ public class prManager {
     private scheduler currentScheduler;
     private process runningProcess;
     private otherKerServices kerServices;
-    private process[] processTable;  // Array of all processes
+    private process[] processTable;  
     private int processCount;
 
     public prManager(otherKerServices kerServices) {
         this.internalClock = 0;
-        this.readyQ = new queue("fifo");      // FIFO ready queue
-        this.submitQ = new queue("fifo");      // Submit queue
-        this.HQ1 = new queue("rm");            // HQ1: sorted by memory (ascending)
-        this.HQ2 = new queue("fifo");          // HQ2: FIFO
+        this.readyQ = new queue("fifo");
+        this.submitQ = new queue("fifo");
+        this.HQ1 = new queue("rm");
+        this.HQ2 = new queue("fifo");
         this.kerServices = kerServices;
         this.runningProcess = null;
-        this.processTable = new process[100];  // As per spec
+        this.processTable = new process[100];
         this.processCount = 0;
     }
     
-    // Set scheduler type (dynamic or static RR)
     public void setScheduler(String type, int teamNumber) {
         if (type.equalsIgnoreCase("dynamic")) {
-            this.currentScheduler = new dRRscheduler(readyQ);
+            this.currentScheduler = new dRRscheduler(); // MODIFIED: No readyQ passed
         } else if (type.equalsIgnoreCase("static")) {
-            this.currentScheduler = new sRRscheduler(readyQ, teamNumber);
+            this.currentScheduler = new sRRscheduler(teamNumber); // MODIFIED: No readyQ passed
         } else {
-            // Default to dynamic
-            this.currentScheduler = new dRRscheduler(readyQ);
+            this.currentScheduler = new dRRscheduler(); // MODIFIED: No readyQ passed
         }
     }
 
-    // Handle arriving process (called by SimulationController)
-    public void procArrivalRoutine(process p) {
-        // Add to process table
+    public void procArrivalRoutine(long jobId, long arrivalTime, long runtime, int priority, long memory, int devices) {
+        process p = new process(jobId, arrivalTime, runtime, priority, memory, devices, 0);
         processTable[processCount++] = p;
         
-        // Check if job exceeds TOTAL system resources
-        if (kerServices.exceedsTotal(p)) {
-            p.setState(5);  // REJECTED
+        // MODIFIED: passing resource values p.getMr(), p.getDr()
+        if (kerServices.exceedsTotal(p.getMr(), p.getDr())) {
+            p.setState(5);
             return;
         }
         
-        // Check if enough AVAILABLE resources
-        if (kerServices.canAllocate(p)) {
-            // Allocate and move to ready queue
+        // MODIFIED: passing resource values p.getMr(), p.getDr()
+        if (kerServices.canAllocate(p.getMr(), p.getDr())) {
             createProcess(p);
         } else {
-            // Put in hold queue based on priority
-            p.setState(1);  // HOLD state
+            p.setState(1);
             if (p.getPriority() == 1) {
-                HQ1.enqueue(p);  // Priority 1 -> HQ1 (sorted by memory)
+                HQ1.enqueue(p);
             } else {
-                HQ2.enqueue(p);  // Priority 2 -> HQ2 (FIFO)
+                HQ2.enqueue(p);
             }
         }
     }
     
-    // Create process and allocate resources
     private void createProcess(process p) {
-        kerServices.allocateMemory(p);
-        kerServices.reserveDevices(p);
-        p.setState(2);  // READY state
+        // MODIFIED: passing resource values
+        kerServices.allocateMemory(p.getMr());
+        kerServices.reserveDevices(p.getDr());
+        p.setState(2);
         readyQ.enqueue(p);
         
-        // Update scheduler metrics
         if (currentScheduler != null) {
-            currentScheduler.updateMetrics();
+            // MODIFIED: passing readyQ to the method
+            currentScheduler.updateMetrics(readyQ);
         }
     }
     
-    // Dispatch - load process from ready queue to CPU
     private long dispatch() {
-        // If no process running, get next from ready queue
         if (runningProcess == null) {
             if (!readyQ.isEmpty()) {
                 node nextNode = readyQ.dequeue();
                 runningProcess = nextNode.p;
-                runningProcess.setState(3);  // RUNNING state
+                runningProcess.setState(3);
             } else {
-                return Long.MAX_VALUE;  // No process to run
+                return Long.MAX_VALUE;
             }
         }
         
-        // Calculate time quantum using scheduler
-        long timeQuantum = currentScheduler.selectNextProcess(runningProcess);
+        // MODIFIED: passing readyQ to the method
+        long timeQuantum = currentScheduler.selectNextProcess(runningProcess, readyQ);
         return timeQuantum;
     }
     
-    // Advance CPU time by duration
     public void cpuTimeAdvance(long duration) {
         if (runningProcess != null) {
-            // Reduce remaining time
             runningProcess.setRemainingTime(runningProcess.getRemainingTime() - duration);
             
             if (runningProcess.getRemainingTime() <= 0) {
-                // Process terminates
                 terminateProcess(runningProcess);
             } else {
-                // Time quantum expired, return to ready queue
-                runningProcess.setState(2);  // READY
+                runningProcess.setState(2);
                 readyQ.enqueue(runningProcess);
                 runningProcess = null;
             }
             
-            // Update scheduler metrics after process change
             if (currentScheduler != null) {
-                currentScheduler.updateMetrics();
+                // MODIFIED: passing readyQ to the method
+                currentScheduler.updateMetrics(readyQ);
             }
         }
         
-        // Update internal clock
         internalClock += duration;
     }
     
-    // Terminate process and release resources
     private void terminateProcess(process p) {
-        p.setState(4);  // TERMINATED
+        p.setState(4);
         p.setFinishTime(internalClock);
         
-        // Release resources
-        kerServices.deallocateMemory(p);
-        kerServices.releaseDevices(p);
+        // MODIFIED: passing resource values
+        kerServices.deallocateMemory(p.getMr());
+        kerServices.releaseDevices(p.getDr());
         runningProcess = null;
         
-        // Check hold queues (HQ1 first, then HQ2)
         checkHoldQueues();
     }
     
-    // Check if processes in hold queues can move to ready queue
     private void checkHoldQueues() {
-        // Check HQ1 first (higher priority)
-        while (!HQ1.isEmpty() && kerServices.canAllocate(HQ1.peek().p)) {
+        // MODIFIED: passing resource values
+        while (!HQ1.isEmpty() && kerServices.canAllocate(HQ1.peek().p.getMr(), HQ1.peek().p.getDr())) {
             node pNode = HQ1.dequeue();
             createProcess(pNode.p);
         }
         
-        // Then check HQ2
-        while (!HQ2.isEmpty() && kerServices.canAllocate(HQ2.peek().p)) {
+        // MODIFIED: passing resource values
+        while (!HQ2.isEmpty() && kerServices.canAllocate(HQ2.peek().p.getMr(), HQ2.peek().p.getDr())) {
             node pNode = HQ2.dequeue();
             createProcess(pNode.p);
         }
     }
     
-    // Get next internal event time (when running process finishes or time slice expires)
     public long getNextDecisionTime() {
         if (runningProcess != null) {
             long timeQuantum = dispatch();
             return internalClock + timeQuantum;
         } else if (!readyQ.isEmpty()) {
-            // Start next process immediately
             dispatch();
             if (runningProcess != null) {
-                long timeQuantum = currentScheduler.selectNextProcess(runningProcess);
+                // MODIFIED: passing readyQ to the method
+                long timeQuantum = currentScheduler.selectNextProcess(runningProcess, readyQ);
                 return internalClock + timeQuantum;
             }
         }
-        return Long.MAX_VALUE;  // No internal events
+        return Long.MAX_VALUE;
     }
+
+    public int getFinishedProcessCount() {
+        int finished = 0;
+        for (int i = 0; i < processCount; i++) {
+            if (processTable[i].getState() == 4) {  // TERMINATED
+                finished++;
+            }
+            }
+        return finished;
+    }
+
+    public String getFinishedProcessesString() {
+        StringBuilder sb = new StringBuilder();
+
+        int finishedCount = 0;
+        double totalTurnaroundTime = 0;
+
+        for (int i = 0; i < processCount; i++) {
+            process p = processTable[i];
+
+            if (p.getState() == 4) { 
+                finishedCount++;
+
+                double waitingTime = p.getTurnaroundTime() - p.getBt();
+
+                sb.append(String.format(
+                    "  %-6d %-15.2f %-16.2f %-17.2f %-13.2f%n",
+                    p.getPid(),
+                    (double) p.getAt(),
+                    (double) p.getFinishTime(),
+                    (double) p.getTurnaroundTime(),
+                    waitingTime
+                ));
+
+                totalTurnaroundTime += p.getTurnaroundTime();
+            }
+        }
+
+        return sb.toString();
+    }
+
     
-    // Get running process ID
     public long getRunningProcId() {
         return runningProcess != null ? runningProcess.getPid() : -1;
     }
     
-    // Update internal clock (called by SimulationController)
     public void setInternalClock(long time) {
         this.internalClock = time;
     }
@@ -177,7 +202,6 @@ public class prManager {
         return internalClock;
     }
     
-    // Getters for display/statistics
     public process[] getProcessTable() {
         return processTable;
     }

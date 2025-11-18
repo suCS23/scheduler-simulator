@@ -1,20 +1,21 @@
+// scheduler.java (UPDATED)
+
 public abstract class scheduler {
     
-    protected queue readyQ;  // Reference to ready queue
+    // REMOVED: protected queue readyQ;
     protected long SR;       // Sum of remaining burst times
     protected long AR;       // Average of remaining burst times
     
-    public scheduler(queue readyQ) {
-        this.readyQ = readyQ;
+    public scheduler() { // MODIFIED: No longer takes readyQ
         this.SR = 0;
         this.AR = 0;
     }
     
-    // Abstract method - each scheduler implements differently
-    protected abstract long selectNextProcess(process currentProcess);
+    // Abstract method - now requires the readyQ to be passed for inspection
+    protected abstract long selectNextProcess(process currentProcess, queue readyQ);
     
-    // Update SR and AR based on ready queue
-    protected void updateMetrics() {
+    // Update SR and AR based on ready queue. Now takes readyQ as argument.
+    protected void updateMetrics(queue readyQ) {
         SR = 0;
         int count = 0;
         

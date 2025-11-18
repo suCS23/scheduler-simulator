@@ -1,14 +1,17 @@
+// sRRscheduler.java (UPDATED)
+
 public class sRRscheduler extends scheduler {
 
     private int timeQuantum;
     
-    public sRRscheduler(queue readyQ, int teamNumber) {
-        super(readyQ);
+    public sRRscheduler(int teamNumber) { // MODIFIED: Removed readyQ from constructor
+        super();
         this.timeQuantum = 10 + teamNumber;  // Fixed quantum = 10 + team number
     }
     
     @Override
-    protected long selectNextProcess(process currentProcess) {
+    // MODIFIED: Takes readyQ, but ignores it since it's a Static RR
+    protected long selectNextProcess(process currentProcess, queue readyQ) {
         if (currentProcess == null) {
             return 0;
         }

@@ -1,3 +1,4 @@
+// otherKerServices.java
 
 class otherKerServices {
 
@@ -6,7 +7,6 @@ class otherKerServices {
     private int noDevs;
     private int totalNoDevs;
 
-    // FIX: Initialize total resources
     public otherKerServices(long memorySize, int noDevs) {
         this.memorySize = memorySize;
         this.totalMemorySize = memorySize; // Set total
@@ -14,30 +14,36 @@ class otherKerServices {
         this.totalNoDevs = noDevs;       // Set total
     }
 
-    public void allocateMemory(process p) {
-        this.memorySize -= p.getMr();
+    // Allocate memory by taking the amount required (mr) directly
+    public void allocateMemory(long mr) {
+        this.memorySize -= mr;
     }
 
-    public void deallocateMemory(process p) {
-        this.memorySize += p.getMr();
+    // Deallocate memory by taking the amount required (mr) directly
+    public void deallocateMemory(long mr) {
+        this.memorySize += mr;
     }
 
-    public void reserveDevices(process p) {
-        this.noDevs -= p.getDr();
+    // Reserve devices by taking the count required (dr) directly
+    public void reserveDevices(int dr) {
+        this.noDevs -= dr;
     }
 
-    public void releaseDevices(process p) {
-        this.noDevs += p.getDr();
+    // Release devices by taking the count required (dr) directly
+    public void releaseDevices(int dr) {
+        this.noDevs += dr;
     }
 
     // Check if job exceeds TOTAL system resources (for rejection)
-    public boolean exceedsTotal(process p) {
-        return p.getMr() > totalMemorySize || p.getDr() > totalNoDevs;
+    // Takes memory (mr) and devices (dr) directly
+    public boolean exceedsTotal(long mr, int dr) {
+        return mr > totalMemorySize || dr > totalNoDevs;
     }
     
     // Check if enough AVAILABLE resources (for allocation)
-    public boolean canAllocate(process p) {
-        return p.getMr() <= memorySize && p.getDr() <= noDevs;
+    // Takes memory (mr) and devices (dr) directly
+    public boolean canAllocate(long mr, int dr) {
+        return mr <= memorySize && dr <= noDevs;
     }
     
     // Getters for statistics/display

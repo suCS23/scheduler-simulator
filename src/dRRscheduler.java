@@ -1,17 +1,20 @@
+// dRRscheduler.java (UPDATED)
+
 public class dRRscheduler extends scheduler {
     
-    public dRRscheduler(queue readyQ) {
-        super(readyQ);
+    public dRRscheduler() { // MODIFIED: Removed readyQ from constructor
+        super();
     }
     
     @Override
-    protected long selectNextProcess(process currentProcess) {
+    // MODIFIED: Takes readyQ
+    protected long selectNextProcess(process currentProcess, queue readyQ) {
         if (currentProcess == null) {
             return 0;
         }
         
-        // Update SR and AR before calculating time quantum
-        updateMetrics();
+        // Update SR and AR before calculating time quantum, passing the queue
+        updateMetrics(readyQ);
         
         long timeQuantum;
         

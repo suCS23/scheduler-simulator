@@ -36,7 +36,6 @@ Finished Jobs (detailed)
   Job    ArrivalTime     CompleteTime     TurnaroundTime    WaitingTime
 ------------------------------------------------------------------------
   EMPTY
-Total Finished Jobs:             0
 
 
 
@@ -123,7 +122,6 @@ Finished Jobs (detailed)
   Job    ArrivalTime     CompleteTime     TurnaroundTime    WaitingTime
 ------------------------------------------------------------------------
   EMPTY
-Total Finished Jobs:             0
 
 
 
