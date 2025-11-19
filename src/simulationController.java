@@ -146,7 +146,8 @@ public class simulationController {
         
         out.println("Jobs in Ready List                                      ");
         out.println("--------------------------------------------------------");
-        printReadyQueue(procManager.getReadyQ());
+        // CALL THE MANAGER: No more queue or node usage here
+        out.print(procManager.getReadyQueueContentString());
         out.println();
         
         out.println("Jobs in Long Job List                                   ");
@@ -156,12 +157,14 @@ public class simulationController {
         
         out.println("Jobs in Hold List 1                                     ");
         out.println("--------------------------------------------------------");
-        printHoldQueue(procManager.getHQ1());
+        // CALL THE MANAGER: No more queue or node usage here
+        out.print(procManager.getHQ1ContentString());
         out.println();
         
         out.println("Jobs in Hold List 2                                     ");
         out.println("--------------------------------------------------------");
-        printHoldQueue(procManager.getHQ2());
+        // CALL THE MANAGER: No more queue or node usage here
+        out.print(procManager.getHQ2ContentString());
         out.println();
         out.println();
         

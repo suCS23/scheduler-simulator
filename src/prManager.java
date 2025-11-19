@@ -1,5 +1,3 @@
-// prManager.java (UPDATED)
-
 public class prManager {
     
     private long internalClock;
@@ -162,14 +160,10 @@ public class prManager {
     public String getFinishedProcessesString() {
         StringBuilder sb = new StringBuilder();
 
-        int finishedCount = 0;
-        double totalTurnaroundTime = 0;
-
         for (int i = 0; i < processCount; i++) {
             process p = processTable[i];
 
             if (p.getState() == 4) { 
-                finishedCount++;
 
                 double waitingTime = p.getTurnaroundTime() - p.getBt();
 
@@ -181,8 +175,6 @@ public class prManager {
                     (double) p.getTurnaroundTime(),
                     waitingTime
                 ));
-
-                totalTurnaroundTime += p.getTurnaroundTime();
             }
         }
 
@@ -210,23 +202,29 @@ public class prManager {
         return processCount;
     }
     
-    public queue getReadyQ() {
-        return readyQ;
-    }
-    
-    public queue getHQ1() {
-        return HQ1;
-    }
-    
-    public queue getHQ2() {
-        return HQ2;
-    }
-    
     public process getRunningProcess() {
         return runningProcess;
     }
     
     public scheduler getScheduler() {
         return currentScheduler;
+    }
+
+    // NEW GETTER for simulationController
+    public String getReadyQueueContentString() {
+        // Delegate formatting to the queue object
+        return readyQ.getQueueContentString();
+    }
+    
+    // NEW GETTER for simulationController
+    public String getHQ1ContentString() {
+        // Delegate formatting to the queue object
+        return HQ1.getQueueContentString();
+    }
+
+    // NEW GETTER for simulationController
+    public String getHQ2ContentString() {
+        // Delegate formatting to the queue object
+        return HQ2.getQueueContentString();
     }
 }

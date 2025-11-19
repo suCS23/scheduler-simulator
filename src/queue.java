@@ -99,6 +99,23 @@ public class queue {
     node getFront() {
         return front;
     }
+
+    // NEW METHOD: Formats the queue content for display
+    public String getQueueContentString() {
+        if (isEmpty()) {
+            return "  EMPTY\n";
+        }
+        
+        StringBuilder sb = new StringBuilder();
+        node current = front; // The queue can access its own internal 'node'
+        while (current != null) {
+            // Access process details using current.p
+            sb.append(String.format("Job ID %d , %.2f Cycles left to completion.%n", 
+                current.p.getPid(), (double)current.p.getRemainingTime()));
+            current = current.next;
+        }
+        return sb.toString();
+    }
 }
 
 class node {
