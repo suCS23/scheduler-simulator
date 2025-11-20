@@ -6,6 +6,7 @@ public class queue {
     private node front;
     private node rear;
     private final String schType; 
+    private int size;
 
     // ==============================
     //     Constructor & Methods
@@ -48,9 +49,11 @@ public class queue {
                 rear = newNode;
             }
         }
+        size++;
     }
 
     node dequeue() {
+        size--;
         if (!isEmpty()) {
             node temp = front;
             front = front.next;
@@ -64,6 +67,8 @@ public class queue {
     }
 
     node peek() { return (!isEmpty()) ? front : null; }
+
+    int getSize() { return size; }
 
     boolean isEmpty() { return front == null; }
 

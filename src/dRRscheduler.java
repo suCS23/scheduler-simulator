@@ -1,47 +1,33 @@
 
 public class dRRscheduler extends scheduler {
     
-    protected long SR;
-    protected long AR;
-    
-    public long getSR() { return SR; }
-    public long getAR() { return AR; }
+    // ==============================
+    //           Attributes
+    // ==============================
+    protected long SR; //sum of remianing time
+    protected long AR; //mean of remaining time
 
+    // ==============================
+    //            Selector
+    // ==============================
     @Override
     protected long selectNextProcess(process currentProcess) {
-        // Rule 1: "For the first process, it begins with time quantum equals to the burst time"
-        if (this.AR == 0) {
-            return currentProcess.getRemainingTime();
-        }
-        
-        // Rule 2: Use AR (Average Remaining) as the Time Quantum
-        long timeQuantum = this.AR;
-
-        // Safety check: TQ cannot be 0 or negative
-        if (timeQuantum <= 0) {
-            timeQuantum = currentProcess.getRemainingTime();
-        }
-        
-        return Math.min(timeQuantum, currentProcess.getRemainingTime());
+        return (this.AR > 0)? Math.min(this.AR, currentProcess.getRemainingTime()) : currentProcess.getRemainingTime();
     }
     
-    public void updateMetrics(queue readyQ) {
-        long totalSR = 0;
-        int count = 0;
-        
-        node current = readyQ.peek();
+    // ==============================
+    //            Mutator
+    // ==============================
+    public void setter(queue readyQ) {
+
+        //step 1 : sum all the remaining times of all processes
+        node current = readyQ.peek(); this.SR = 0;
         while (current != null) {
-            totalSR += current.p.getRemainingTime();
-            count++;
+            this.SR += current.p.getRemainingTime();
             current = current.next;
         }
         
-        this.SR = totalSR;
-        
-        if (count > 0) {
-            this.AR = (long)(Math.ceil((double)totalSR / count));
-        } else {
-            this.AR = 0;
-        }
+        //step 2 : get the mean 
+        this.AR = (readyQ.getSize() > 0)? (long)(Math.ceil((double)this.SR / readyQ.getSize())) : 0;
     }
 }

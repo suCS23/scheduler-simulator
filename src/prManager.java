@@ -70,13 +70,13 @@ public class prManager {
         
         //if the scheduel type is dynamic, then update metrics
         readyQ.enqueue(p);
-        if(currentScheduler instanceof dRRscheduler rRscheduler) rRscheduler.updateMetrics(readyQ);
+        if(currentScheduler instanceof dRRscheduler rRscheduler) rRscheduler.setter(readyQ);
     }
 
     // ==============================
     //           Dispatch
     // ==============================
-    // dispacthes processes to rummimg queue
+    // dispacthes processes to running queue
     private void dispatch() {
 
         //if there is no running process, run one
@@ -125,7 +125,7 @@ public class prManager {
                     runningProcess.setState(2);
                     readyQ.enqueue(runningProcess);
     
-                    if(currentScheduler instanceof dRRscheduler rRscheduler) rRscheduler.updateMetrics(readyQ);
+                    if(currentScheduler instanceof dRRscheduler rRscheduler) rRscheduler.setter(readyQ);
     
                     runningProcess = null;
                     currentQuantumEndTime = Long.MAX_VALUE;
