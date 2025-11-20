@@ -23,8 +23,9 @@ public class simulationController {
      public static void main(String[] args) {
         
         //part 1 : intialize io variables in a try/catch method
+        //do not forget to change the pathing
         try {
-            in = new Scanner(new File("C:\\Users\\PC\\OneDrive\\Desktop\\CODING-GARAGE\\scheduelSimulator\\src\\IOfiles\\inputD0.txt"));
+            in = new Scanner(new File("C:\\Users\\PC\\OneDrive\\Desktop\\CODING-GARAGE\\scheduelSimulator\\src\\IOfiles\\inputS.txt"));
             out = new PrintWriter(new File("C:\\Users\\PC\\OneDrive\\Desktop\\CODING-GARAGE\\scheduelSimulator\\src\\IOfiles\\output.txt"));
         } catch (FileNotFoundException e) {
             System.out.println("There is an error, maybe its in your files pathing :(");
