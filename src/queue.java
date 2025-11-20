@@ -1,4 +1,3 @@
-// queue.java
 public class queue {
 
     private node front;
@@ -7,8 +6,6 @@ public class queue {
 
     queue(String schType) {
         this.schType = schType;
-        this.front = null;
-        this.rear = null;
     }
 
     void enqueue(process p) {
