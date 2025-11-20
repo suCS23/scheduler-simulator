@@ -1,5 +1,5 @@
 
-class otherKerServices {
+public class otherKerServices {
 
     // ==============================
     //           attributes
