@@ -1,18 +1,22 @@
 
 public class sRRscheduler extends scheduler {
 
+    // ==============================
+    //           Attribute
+    // ==============================
     private final int timeQuantum;
     
-    public sRRscheduler(int teamNumber) { // MODIFIED: Removed readyQ from constructor
-        this.timeQuantum = 10 + teamNumber;  // Fixed quantum = 10 + team number
+    // ==============================
+    //           Constuctor
+    // ==============================
+    public sRRscheduler(int teamNumber) { 
+        this.timeQuantum = 10 + teamNumber;  
     }
     
+    //if the burst time of the process is less than quantum, then return the burst time
+    //else return quantum
     @Override
     protected long selectNextProcess(process currentProcess) {
         return Math.min(timeQuantum, currentProcess.getRemainingTime());
-    }
-    
-    public int getTimeQuantum() {
-        return timeQuantum;
     }
 }
