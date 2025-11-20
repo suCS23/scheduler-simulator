@@ -1,35 +1,47 @@
-// dRRscheduler.java (UPDATED)
 
 public class dRRscheduler extends scheduler {
     
-    public dRRscheduler() { // MODIFIED: Removed readyQ from constructor
-        super();
+    protected long SR;
+    protected long AR;
+    
+    public long getSR() { return SR; }
+    public long getAR() { return AR; }
+
+    @Override
+    protected long selectNextProcess(process currentProcess) {
+        // Rule 1: "For the first process, it begins with time quantum equals to the burst time"
+        if (this.AR == 0) {
+            return currentProcess.getRemainingTime();
+        }
+        
+        // Rule 2: Use AR (Average Remaining) as the Time Quantum
+        long timeQuantum = this.AR;
+
+        // Safety check: TQ cannot be 0 or negative
+        if (timeQuantum <= 0) {
+            timeQuantum = currentProcess.getRemainingTime();
+        }
+        
+        return Math.min(timeQuantum, currentProcess.getRemainingTime());
     }
     
-    @Override
-    // MODIFIED: Takes readyQ
-    protected long selectNextProcess(process currentProcess, queue readyQ) {
-        if (currentProcess == null) {
-            return 0;
+    public void updateMetrics(queue readyQ) {
+        long totalSR = 0;
+        int count = 0;
+        
+        node current = readyQ.getFront();
+        while (current != null) {
+            totalSR += current.p.getRemainingTime();
+            count++;
+            current = current.next;
         }
         
-        // Update SR and AR before calculating time quantum, passing the queue
-        updateMetrics(readyQ);
+        this.SR = totalSR;
         
-        long timeQuantum;
-        
-        if (readyQ.isEmpty()) {
-            // If ready queue is empty, TQ = remaining burst time (run to completion)
-            timeQuantum = currentProcess.getRemainingTime();
+        if (count > 0) {
+            this.AR = (long)(Math.ceil((double)totalSR / count));
         } else {
-            // If ready queue has processes, TQ = AR (average)
-            timeQuantum = AR;
-            if (timeQuantum <= 0) {
-                timeQuantum = currentProcess.getRemainingTime();
-            }
+            this.AR = 0;
         }
-        
-        // Return actual time to run (min of quantum and remaining time)
-        return Math.min(timeQuantum, currentProcess.getRemainingTime());
     }
 }

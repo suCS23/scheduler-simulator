@@ -1,246 +1,187 @@
-import java.io.File;
-import java.io.PrintWriter;
-import java.util.Scanner;
+// simulationController.java
+import java.io.*;
+import java.util.*;
 
 public class simulationController {
 
-    private long curTime;
-    
-    //declaring I/O files, reader, writer, system components, and variables used for statistics
-    private File inputFile;
-    private File outputFile;
-    private Scanner in;
-    private PrintWriter out;
-    private prManager procManager;
-    private otherKerServices kerServices;
-    private double totalTurnaroundTime;
-    private int completedProcesses;
+    // ==============================
+    //           Attributes
+    // ==============================
 
-    //setting up some stuff needed for future use
-    private String schedulerType = "dynamic";  //holds the type of scheduel, sat "dynamic" as default because most input files are dynamic
-    private final int teamNumber = 8;  //the variable is set to 8 due to our group's number
+    private static long curTime;
+    private static Scanner in;
+    private static PrintWriter out;
+    private static prManager procManager;
+    private static otherKerServices kerServices;
 
-    //constructor used to abstract the main method
-    public simulationController(String inputPath, String outputPath) throws Exception {
-        this.inputFile = new File(inputPath);
-        this.outputFile = new File(outputPath);
-        this.in = new Scanner(inputFile);
-        this.out = new PrintWriter(outputFile);
-        this.curTime = 0;
-        this.totalTurnaroundTime = 0;
-        this.completedProcesses = 0;
-    }
-    
-    //runs the processes
-    public void run() {
+    private static String schedulerType = "dynamic"; //sat "dynamic" as default becuase it is mostly used
+    private static final int TEAM_NUMBER = 8; //8 for our gorup's number "G8", use 6 to see if the output is accurate to the expected output
+
+    // ==============================
+    //             Main
+    // ==============================
+     public static void main(String[] args) {
+        
+        //part 1 : intialize io variables in a try/catch method
+        try {
+            in = new Scanner(new File("C:\\Users\\PC\\OneDrive\\Desktop\\CODING-GARAGE\\scheduelSimulator\\src\\IOfiles\\inputD0.txt"));
+            out = new PrintWriter(new File("C:\\Users\\PC\\OneDrive\\Desktop\\CODING-GARAGE\\scheduelSimulator\\src\\IOfiles\\output.txt"));
+        } catch (FileNotFoundException e) {
+            System.out.println("There is an error, maybe its in your files pathing :(");
+        }
+
+        //part 2 : run the events
         while (in.hasNext()) {
+
             String command = in.next();
             String line = in.hasNext() ? in.nextLine().trim() : "";
-            
+
             switch (command) {
-                case "C":
-                    sysGen(line);
-                    break;
-                case "A":
-                    parseCmd(line);
-                    break;
-                case "D":
-                    displayFinalStatistics(line);
-                    break;
-                default:
-                    System.out.println("Non-eligible command: " + command);
+                case "C" -> sysGen(line);
+                case "A" -> parseCmd(line);
+                case "D" -> displayFinalStatistics(line);
             }
         }
-        
-        close();
+
+        //part 3 : finalize
+        out.printf("%n--- Simulation finished at time %.1f --- %n%n", (double)curTime);
+        out.flush();
+        out.close();
+        in.close();
+
+        System.out.println("""
+                           \nDone, thanks for running "suOS" version 5.12 
+                           Checkout your "output.txt" file for results
+                           Stay tuned for future updates on our system :3
+
+                           Made by : G8 (Saud Alfhaid, Faris Alzahrani)
+                           Made for : Dr.As3d (CPCS361 - CS2)
+                           """);
     }
 
-    //intializes "kernel" & "manager" classes
-    public void sysGen(String line) {
-     
-        //step 1 : splits the line into parts & distribute them into variables
-        String[] parts = line.trim().split("\\s+");
-        long startTime = Long.parseLong(parts[0]);
-        long memory = Long.parseLong(parts[1].split("=")[1]);
-        int devices = Integer.parseInt(parts[2].split("=")[1]);
-        curTime = startTime;
+    // ==============================
+    //   C  — System Configuration
+    // ==============================
+    public static void sysGen(String line) {
 
-        //step 2 : intialize the classes
-        kerServices = new otherKerServices(memory, devices);
-        procManager = new prManager(kerServices);
-        procManager.setScheduler(schedulerType, teamNumber);
-        procManager.setInternalClock(startTime);
+        //part 1 : remove all the letters and symbols, and place all the numbers in an array 
+        String[] numbers = line.replaceAll("[=A-Za-z]", "").split(" ");
         
-        //step 3 : use teritary if to check for the scheduler type used
-        String schedulerName = schedulerType.equalsIgnoreCase("dynamic") ? "DynamicRR" : "StaticRR";
-        out.printf("CONFIG at %.2f: mem=%d devices=%d scheduler=%s%n%n", 
-            (double)startTime, memory, devices, schedulerName);
+        //part 2 : Check for scheduel type 
+        //the hole here is, in all the input files it only gives out scheduleType if it is static.
+        //therefor, if the length of the array is 4, the scheduleType is static because all the 
+        //dynamic input files do not give out the scheduelType
+        String schedulerName = "DynamicRR";
+        if(numbers.length == 4){
+            schedulerType = "static"; 
+            schedulerName = "StaticRR";
+        }
+        
+        //part 3 : reset current time and intialize kernel and process manager's instances
+        curTime = 0;
+        kerServices = new otherKerServices( Long.parseLong(numbers[1]), Integer.parseInt(numbers[2]));
+        procManager = new prManager(kerServices, schedulerType, TEAM_NUMBER);
+
+        //part 4 : print out configuration status
+        out.printf("CONFIG at %s.00 ---> mem = %s || devices = %s || scheduler = %s", 
+                           numbers[0], numbers[1], numbers[2], schedulerName);
     }
 
-    //reads all info needed for the process 
-    public void parseCmd(String line) {
-        
-        //step 1 : splits the line into parts & distribute them into variables
-        String[] parts = line.trim().split("\\s+");
-        long arrivalTime = Long.parseLong(parts[0]);
-        long jobId = Long.parseLong(parts[1].split("=")[1]);
-        long memory = Long.parseLong(parts[2].split("=")[1]);
-        int devices = Integer.parseInt(parts[3].split("=")[1]);
-        long runtime = Long.parseLong(parts[4].split("=")[1]);
-        int priority = Integer.parseInt(parts[5].split("=")[1]);
-        
-        //step 2 : process all events until arrival time using min(i,e)
-        processEventsUntil(arrivalTime);
-        
-        //step 3 : start new process procedures
-        procManager.procArrivalRoutine(jobId, arrivalTime, runtime, priority, memory, devices);
+    // ==============================
+    //       A  — Job Arrival
+    // ==============================
+    public static void parseCmd(String line) {
+
+        //part 1 : remove all the letters and symbols, and place all the numbers in an array
+        String[] numbers = line.replaceAll("[=A-Za-z]", "").split(" ");
+
+        //part 2 : check for internal events, after that intialize a process by calling prManager instance 
+        eventHandling(Long.parseLong(numbers[0]));
+        procManager.procArrivalRoutine(Long.parseLong(numbers[1]), Long.parseLong(numbers[0]), 
+                                       Long.parseLong(numbers[4]), Integer.parseInt(numbers[5]), 
+                                       Long.parseLong(numbers[2]), Integer.parseInt(numbers[3]));
     }
-    
-    //process events until target time using min(i,e) logic
-    private void processEventsUntil(long targetTime) {
+
+    // ==============================
+    //        Handling events
+    // ==============================
+    // check which process comes first (AT wise), and
+    // sets the time for both current and internal clock
+    private static void eventHandling(long targetTime) {
+
+        //part 1 : 
         while (curTime < targetTime) {
 
-            //step 1 : declare & intialize variables 
-            long i = procManager.getNextDecisionTime();
-            long e = targetTime;
-            
-            //step 2 : check conditions
-            if (i <= e) { //if next internal event process a.t is less than an next external event process 
-                          //a.t, enter this critical section. Otherwise, let external event process.  
+            //part a : returns arriving time of next internal event
+            long nextInternal = procManager.getNextDecisionTime();
 
-                if (i == Long.MAX_VALUE) { //if next internal event process a.t is too huge, jump to next external
-                    curTime = e;
-                    break;
-                }
-                
-                long duration = i - curTime;
-                if (duration > 0) { //if duration is more than 0, update curTime with next internal event and check with CPU to get next internal event (if exists)
-                    curTime = i;
-                    procManager.cpuTimeAdvance(duration);
-                }
-            } else { 
-                curTime = e;
-                break;
+            //part b : if Internal is less than arrival time of external event, loop
+            //else, do it one last time
+            if (nextInternal <= targetTime) {
+                long duration = nextInternal - curTime;
+                procManager.cpuTimeAdvance(duration);
+                curTime = nextInternal;
+            } else {
+                long duration = targetTime - curTime;
+                procManager.cpuTimeAdvance(duration);
+                curTime = targetTime;
             }
         }
-        
-        //step 3 : sync internal clock
+
+        //part 2 : 
         procManager.setInternalClock(curTime);
     }
 
-    //used to display everything in the output.txt file
-    public void displayFinalStatistics(String line) {
-        long displayTime = Long.parseLong(line.trim());
+    // ==============================
+    //   D  — Display
+    // ==============================
+    public static void displayFinalStatistics(String line) {
+        long displayTime = Long.parseLong(line);
+        eventHandling(displayTime);
 
-        processEventsUntil(displayTime);
-        
-        out.println("\n-------------------------------------------------------");
+        out.println();
+        out.println("-------------------------------------------------------");
         out.println("System Status:                                         ");
         out.println("-------------------------------------------------------");
-        out.printf("          Time: %.2f%n", (double)displayTime);
+        out.printf("          Time: %.2f%n", (double) displayTime);
         out.printf("  Total Memory: %d%n", kerServices.getTotalMemorySize());
         out.printf(" Avail. Memory: %d%n", kerServices.getMemorySize());
         out.printf(" Total Devices: %d%n", kerServices.getTotalNoDevs());
         out.printf("Avail. Devices: %d%n", kerServices.getNoDevs());
         out.println();
-        
+
         out.println("Jobs in Ready List                                      ");
         out.println("--------------------------------------------------------");
-        // CALL THE MANAGER: No more queue or node usage here
         out.print(procManager.getReadyQueueContentString());
         out.println();
-        
+
         out.println("Jobs in Long Job List                                   ");
         out.println("--------------------------------------------------------");
-        out.println("  EMPTY");
-        out.println();
-        
+        out.println("  EMPTY\n");
+
         out.println("Jobs in Hold List 1                                     ");
         out.println("--------------------------------------------------------");
-        // CALL THE MANAGER: No more queue or node usage here
         out.print(procManager.getHQ1ContentString());
         out.println();
-        
+
         out.println("Jobs in Hold List 2                                     ");
         out.println("--------------------------------------------------------");
-        // CALL THE MANAGER: No more queue or node usage here
         out.print(procManager.getHQ2ContentString());
         out.println();
+
         out.println();
-        
         out.println("Finished Jobs (detailed)                                ");
         out.println("--------------------------------------------------------");
         out.println("  Job    ArrivalTime     CompleteTime     TurnaroundTime    WaitingTime");
         out.println("------------------------------------------------------------------------");
-        
-        //since user system "simulation controller" cannot acess process, a method in kernel system "prManager" is used
         out.print(procManager.getFinishedProcessesString());
-        
-        int finishedCount = procManager.getFinishedProcessCount();
-        
-        if (finishedCount == 0) {
+
+        int finished = procManager.getFinishedProcessCount();
+        if (finished == 0)
             out.println("  EMPTY");
-        }else{
-            out.println("Total Finished Jobs:             " + finishedCount);
-        }
+        else
+            out.println("Total Finished Jobs:             " + finished);
+
         out.println();
-        out.println();
-    }
-
-    private void printReadyQueue(queue q) {
-        if (q.isEmpty()) {
-            out.println("  EMPTY");
-            return;
-        }
-        
-        node current = q.getFront();
-        while (current != null) {
-            out.printf("Job ID %d , %.2f Cycles left to completion.%n", 
-                current.p.getPid(), (double)current.p.getRemainingTime());
-            current = current.next;
-        }
-    }
-
-    private void printHoldQueue(queue q) {
-        if (q.isEmpty()) {
-            out.println("  EMPTY");
-            return;
-        }
-        
-        node current = q.getFront();
-        while (current != null) {
-            out.printf("Job ID %d , %.2f Cycles left to completion.%n", 
-                current.p.getPid(), (double)current.p.getRemainingTime());
-            current = current.next;
-        }
-    }
-    
-    private void close() {
-        out.println("\n--- Simulation finished at time " + curTime + ".0 ---\n");
-        in.close();
-        out.flush();
-        out.close();
-    }
-    
-    public static void main(String[] args) {
-
-        //use try & catch" method to handle errors 
-        try {
-
-            //step 1 : input the paths here from the folder "i/ofiles"
-            String inputPath = "C:\\Users\\PC\\OneDrive\\Desktop\\CODING-GARAGE\\scheduelSimulator\\src\\IOfiles\\inputD0.txt";
-            String outputPath = "C:\\Users\\PC\\OneDrive\\Desktop\\CODING-GARAGE\\scheduelSimulator\\src\\IOfiles\\\\output.txt";
-            
-            //step 2 : declare & initialize the constructor to start the run
-            simulationController sim = new simulationController(inputPath, outputPath);
-            sim.run();
-            
-            //step 3 : conformation message
-            System.out.println("Simulation complete! Check output.txt for results.");
-            
-        } catch (Exception e) {
-            System.err.println("Error running simulation:");
-            e.printStackTrace();
-        }
     }
 }
