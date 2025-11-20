@@ -29,7 +29,7 @@ public class dRRscheduler extends scheduler {
         long totalSR = 0;
         int count = 0;
         
-        node current = readyQ.getFront();
+        node current = readyQ.peek();
         while (current != null) {
             totalSR += current.p.getRemainingTime();
             count++;

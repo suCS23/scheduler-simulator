@@ -49,8 +49,8 @@ public class queue {
     }
 
     node peek() { return (!isEmpty()) ? front : null; }
+
     boolean isEmpty() { return front == null; }
-    node getFront() { return front; }
 
     public String getQueueContentString() {
         if (isEmpty()) return "  EMPTY\n";
