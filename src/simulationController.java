@@ -15,7 +15,8 @@ public class simulationController {
     private static otherKerServices kerServices;
 
     private static String schedulerType = "dynamic"; //sat "dynamic" as default becuase it is mostly used
-    private static final int TEAM_NUMBER = 8; //8 for our gorup's number "G8", use 6 to see if the output is accurate to the expected output
+    private static String schedulerName = "DynamicRR"; //sat "dynamic" as default becuase it is mostly used
+    private static final int TEAM_NUMBER = 6; //8 for our gorup's number "G8", use 6 to see if the output is accurate to the expected output
 
     // ==============================
     //             Main
@@ -72,7 +73,7 @@ public class simulationController {
         //the hole here is, in all the input files it only gives out scheduleType if it is static.
         //therefor, if the length of the array is 4, the scheduleType is static because all the 
         //dynamic input files do not give out the scheduelType
-        String schedulerName = "DynamicRR";
+        
         if(numbers.length == 4){
             schedulerType = "static"; 
             schedulerName = "StaticRR";
