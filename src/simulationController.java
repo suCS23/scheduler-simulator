@@ -16,7 +16,7 @@ public class simulationController {
 
     private static String schedulerType = "dynamic"; //sat "dynamic" as default becuase it is mostly used
     private static String schedulerName = "DynamicRR"; //sat "dynamic" as default becuase it is mostly used
-    private static final int TEAM_NUMBER = 6; //8 for our gorup's number "G8", use 6 to see if the output is accurate to the expected output
+    private static final int TEAM_NUMBER = 8; //8 for our gorup's number "G8", use 6 to see if the output is accurate to the expected output
 
     // ==============================
     //             Main
